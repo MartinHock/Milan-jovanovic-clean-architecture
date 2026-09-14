@@ -2,7 +2,7 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-  <!--.NET 9 packages. Most of them will work on .NET 8. If you need to, make the updates here individually.-->
+	<!-- .NET 10 package versions managed centrally. -->
   <ItemGroup>
     <!-- Static code analysis -->
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.34.0.3385" />
