@@ -18,6 +18,10 @@ builder.Services
     .AddPresentation()
     .AddInfrastructure(builder.Configuration);
 
+builder.Services.AddObservability(builder.Configuration, builder.Environment.ApplicationName);
+
+builder.Services.AddRateLimitingInternal(builder.Configuration);
+
 builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
 
 WebApplication app = builder.Build();
@@ -45,6 +49,8 @@ app.UseExceptionHandler();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseRateLimiter();
 
 // REMARK: If you want to use Controllers, you'll need this.
 app.MapControllers();

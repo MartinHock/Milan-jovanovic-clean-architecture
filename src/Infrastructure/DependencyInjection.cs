@@ -35,6 +35,10 @@ public static class DependencyInjection
 
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
 
+#pragma warning disable EXTEXP0018 // HybridCache is released; the API is stable in .NET 10.
+        services.AddHybridCache();
+#pragma warning restore EXTEXP0018
+
         return services;
     }
 
