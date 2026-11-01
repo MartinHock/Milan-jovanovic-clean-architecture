@@ -79,9 +79,7 @@ public sealed class CompleteTodoCommandHandlerTests : BaseHandlerTest
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        TodoItem todoItem = await context.TodoItems.SingleAsync(
-            t => t.Id == todoItemId,
-            TestContext.Current.CancellationToken);
+        TodoItem todoItem = await context.TodoItems.SingleAsync(t => t.Id == todoItemId);
         todoItem.IsCompleted.ShouldBeTrue();
         todoItem.CompletedAt.ShouldBe(completedAt);
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemCompletedDomainEvent);
@@ -102,7 +100,7 @@ public sealed class CompleteTodoCommandHandlerTests : BaseHandlerTest
         };
 
         context.TodoItems.Add(todoItem);
-        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await context.SaveChangesAsync();
 
         return todoItem.Id;
     }

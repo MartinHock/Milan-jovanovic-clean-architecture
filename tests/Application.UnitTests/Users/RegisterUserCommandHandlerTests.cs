@@ -25,7 +25,7 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
             LastName = "User",
             PasswordHash = "hash"
         });
-        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await context.SaveChangesAsync();
 
         var handler = new RegisterUserCommandHandler(context, Substitute.For<IPasswordHasher>());
 
@@ -54,9 +54,7 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        User user = await context.Users.SingleAsync(
-            u => u.Id == result.Value,
-            TestContext.Current.CancellationToken);
+        User user = await context.Users.SingleAsync(u => u.Id == result.Value);
         user.Email.ShouldBe(Command.Email);
         user.PasswordHash.ShouldBe("hashed-password");
         user.DomainEvents.ShouldContain(domainEvent => domainEvent is UserRegisteredDomainEvent);

@@ -47,7 +47,7 @@ public sealed class GetTodoByIdQueryHandlerTests : BaseHandlerTest
             CreatedAt = DateTime.UtcNow
         };
         context.TodoItems.Add(todoItem);
-        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await context.SaveChangesAsync();
 
         HybridCache cache = CreateCache();
         IUserContext userContext = Substitute.For<IUserContext>();

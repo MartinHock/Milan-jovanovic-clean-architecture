@@ -31,16 +31,16 @@ public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program
         builder.UseSetting("RateLimiting:Authentication:PermitLimit", "100000");
     }
 
-    public async ValueTask InitializeAsync()
+    public async Task InitializeAsync()
     {
-        await _dbContainer.StartAsync(TestContext.Current.CancellationToken);
+        await _dbContainer.StartAsync();
 
         using IServiceScope scope = Services.CreateScope();
         ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await dbContext.Database.MigrateAsync(TestContext.Current.CancellationToken);
+        await dbContext.Database.MigrateAsync();
     }
 
-    public new async ValueTask DisposeAsync()
+    public new async Task DisposeAsync()
     {
         await _dbContainer.DisposeAsync();
         await base.DisposeAsync();

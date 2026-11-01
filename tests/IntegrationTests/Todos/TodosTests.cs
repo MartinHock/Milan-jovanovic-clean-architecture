@@ -11,9 +11,7 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
     public async Task GetTodo_Should_ReturnUnauthorized_WhenTokenIsMissing()
     {
         // Act
-        HttpResponseMessage response = await HttpClient.GetAsync(
-            $"todos/{Guid.NewGuid()}",
-            TestContext.Current.CancellationToken);
+        HttpResponseMessage response = await HttpClient.GetAsync($"todos/{Guid.NewGuid()}");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -35,22 +33,17 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
         };
 
         // Act
-        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync(
-            "todos",
-            createRequest,
-            TestContext.Current.CancellationToken);
+        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync("todos", createRequest);
 
         // Assert
         createResponse.EnsureSuccessStatusCode();
-        Guid todoId = await createResponse.Content.ReadFromJsonAsync<Guid>(TestContext.Current.CancellationToken);
+        Guid todoId = await createResponse.Content.ReadFromJsonAsync<Guid>();
         todoId.ShouldNotBe(Guid.Empty);
 
-        HttpResponseMessage getResponse = await HttpClient.GetAsync(
-            $"todos/{todoId}",
-            TestContext.Current.CancellationToken);
+        HttpResponseMessage getResponse = await HttpClient.GetAsync($"todos/{todoId}");
         getResponse.EnsureSuccessStatusCode();
 
-        TodoDto? todo = await getResponse.Content.ReadFromJsonAsync<TodoDto>(TestContext.Current.CancellationToken);
+        TodoDto? todo = await getResponse.Content.ReadFromJsonAsync<TodoDto>();
         todo!.Id.ShouldBe(todoId);
         todo.UserId.ShouldBe(userId);
         todo.Description.ShouldBe("Integration test todo");
@@ -71,27 +64,91 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
             labels = Array.Empty<string>(),
             priority = 1
         };
-        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync(
-            "todos",
-            createRequest,
-            TestContext.Current.CancellationToken);
+        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync("todos", createRequest);
         createResponse.EnsureSuccessStatusCode();
-        Guid todoId = await createResponse.Content.ReadFromJsonAsync<Guid>(TestContext.Current.CancellationToken);
+        Guid todoId = await createResponse.Content.ReadFromJsonAsync<Guid>();
 
         // Act
-        HttpResponseMessage completeResponse = await HttpClient.PutAsync(
-            $"todos/{todoId}/complete",
-            null,
-            TestContext.Current.CancellationToken);
+        HttpResponseMessage completeResponse = await HttpClient.PutAsync($"todos/{todoId}/complete", null);
 
         // Assert
         completeResponse.EnsureSuccessStatusCode();
 
-        HttpResponseMessage getResponse = await HttpClient.GetAsync(
-            $"todos/{todoId}",
-            TestContext.Current.CancellationToken);
+        HttpResponseMessage getResponse = await HttpClient.GetAsync($"todos/{todoId}");
         getResponse.EnsureSuccessStatusCode();
-        TodoDto? todo = await getResponse.Content.ReadFromJsonAsync<TodoDto>(TestContext.Current.CancellationToken);
+        TodoDto? todo = await getResponse.Content.ReadFromJsonAsync<TodoDto>();
         todo!.IsCompleted.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task CreateTodo_Should_ReturnConflict_WhenIdempotencyKeyIsReused()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        var createRequest = new
+        {
+            userId,
+            description = "Idempotent todo",
+            labels = Array.Empty<string>(),
+            priority = 1
+        };
+        string idempotencyKey = Guid.NewGuid().ToString();
+
+        // Act
+        HttpResponseMessage first = await PostTodoAsync(createRequest, idempotencyKey);
+        HttpResponseMessage second = await PostTodoAsync(createRequest, idempotencyKey);
+
+        // Assert
+        first.StatusCode.ShouldBe(HttpStatusCode.OK);
+        second.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task GetTodos_Should_ReturnPagedResults()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        var createRequest = new
+        {
+            userId,
+            description = "Paged todo",
+            labels = Array.Empty<string>(),
+            priority = 1
+        };
+        await PostTodoAsync(createRequest, Guid.NewGuid().ToString());
+        await PostTodoAsync(createRequest, Guid.NewGuid().ToString());
+
+        // Act
+        HttpResponseMessage response = await HttpClient.GetAsync($"todos?userId={userId}&page=1&pageSize=1");
+
+        // Assert
+        response.EnsureSuccessStatusCode();
+        PagedTodos? page = await response.Content.ReadFromJsonAsync<PagedTodos>();
+        page!.Items.Count.ShouldBe(1);
+        page.TotalCount.ShouldBeGreaterThanOrEqualTo(2);
+        page.HasNextPage.ShouldBeTrue();
+    }
+
+    private sealed record PagedTodos(
+        List<TodoDto> Items,
+        int Page,
+        int PageSize,
+        int TotalCount,
+        bool HasNextPage,
+        bool HasPreviousPage);
+
+    private async Task<HttpResponseMessage> PostTodoAsync(object request, string idempotencyKey)
+    {
+        using var message = new HttpRequestMessage(HttpMethod.Post, "todos")
+        {
+            Content = JsonContent.Create(request)
+        };
+        message.Headers.Add("Idempotency-Key", idempotencyKey);
+
+        return await HttpClient.SendAsync(message);
     }
 }

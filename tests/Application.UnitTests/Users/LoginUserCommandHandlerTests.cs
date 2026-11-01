@@ -89,7 +89,7 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         result.Value.AccessToken.ShouldBe("access-token");
         result.Value.RefreshToken.ShouldBe("refresh-token");
 
-        RefreshToken refreshToken = await context.RefreshTokens.SingleAsync(TestContext.Current.CancellationToken);
+        RefreshToken refreshToken = await context.RefreshTokens.SingleAsync();
         refreshToken.Token.ShouldBe("refresh-token");
         refreshToken.ExpiresOnUtc.ShouldBeGreaterThan(dateTimeProvider.UtcNow);
     }
@@ -105,6 +105,6 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
             PasswordHash = "hash"
         });
 
-        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await context.SaveChangesAsync();
     }
 }

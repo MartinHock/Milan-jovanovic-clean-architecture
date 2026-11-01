@@ -71,7 +71,7 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
             LastName = "User",
             PasswordHash = "hash"
         });
-        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await context.SaveChangesAsync();
 
         IUserContext userContext = Substitute.For<IUserContext>();
         userContext.UserId.Returns(UserId);
@@ -86,9 +86,7 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        TodoItem todoItem = await context.TodoItems.SingleAsync(
-            t => t.Id == result.Value,
-            TestContext.Current.CancellationToken);
+        TodoItem todoItem = await context.TodoItems.SingleAsync(t => t.Id == result.Value);
         todoItem.Description.ShouldBe("Write unit tests");
         todoItem.UserId.ShouldBe(UserId);
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemCreatedDomainEvent);

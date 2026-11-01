@@ -83,7 +83,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         result.Value.AccessToken.ShouldBe("new-access-token");
         result.Value.RefreshToken.ShouldBe("new-refresh-token");
 
-        RefreshToken stored = await context.RefreshTokens.SingleAsync(TestContext.Current.CancellationToken);
+        RefreshToken stored = await context.RefreshTokens.SingleAsync();
         stored.Token.ShouldBe("new-refresh-token");
         stored.ExpiresOnUtc.ShouldBeGreaterThan(now);
     }
@@ -109,6 +109,6 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
             User = user
         });
 
-        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await context.SaveChangesAsync();
     }
 }

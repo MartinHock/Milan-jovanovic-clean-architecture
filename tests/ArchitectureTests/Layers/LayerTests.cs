@@ -1,7 +1,5 @@
 ﻿using NetArchTest.Rules;
 using Shouldly;
-using Xunit;
-using TestResult = NetArchTest.Rules.TestResult;
 
 namespace ArchitectureTests.Layers;
 

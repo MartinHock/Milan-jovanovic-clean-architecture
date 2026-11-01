@@ -54,9 +54,7 @@ public sealed class UpdateTodoCommandHandlerTests : BaseHandlerTest
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        TodoItem todoItem = await context.TodoItems.SingleAsync(
-            t => t.Id == todoItemId,
-            TestContext.Current.CancellationToken);
+        TodoItem todoItem = await context.TodoItems.SingleAsync(t => t.Id == todoItemId);
         todoItem.Description.ShouldBe("Updated description");
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemUpdatedDomainEvent);
     }
@@ -75,7 +73,7 @@ public sealed class UpdateTodoCommandHandlerTests : BaseHandlerTest
         };
 
         context.TodoItems.Add(todoItem);
-        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await context.SaveChangesAsync();
 
         return todoItem.Id;
     }
