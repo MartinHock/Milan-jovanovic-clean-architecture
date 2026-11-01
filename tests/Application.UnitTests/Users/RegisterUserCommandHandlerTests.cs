@@ -25,12 +25,12 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
             LastName = "User",
             PasswordHash = "hash"
         });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var handler = new RegisterUserCommandHandler(context, Substitute.For<IPasswordHasher>());
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(Command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -49,14 +49,15 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
         var handler = new RegisterUserCommandHandler(context, passwordHasher);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(Command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        User user = await context.Users.SingleAsync(u => u.Id == result.Value);
+        User user = await context.Users.SingleAsync(u => u.Id == result.Value, TestContext.Current.CancellationToken);
         user.Email.ShouldBe(Command.Email);
         user.PasswordHash.ShouldBe("hashed-password");
         user.DomainEvents.ShouldContain(domainEvent => domainEvent is UserRegisteredDomainEvent);
     }
 }
+

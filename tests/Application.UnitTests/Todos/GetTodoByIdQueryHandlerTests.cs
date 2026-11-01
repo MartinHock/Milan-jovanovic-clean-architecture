@@ -24,7 +24,7 @@ public sealed class GetTodoByIdQueryHandlerTests : BaseHandlerTest
         var query = new GetTodoByIdQuery(Guid.NewGuid());
 
         // Act
-        Result<TodoResponse> result = await handler.Handle(query, CancellationToken.None);
+        Result<TodoResponse> result = await handler.Handle(query, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -47,7 +47,7 @@ public sealed class GetTodoByIdQueryHandlerTests : BaseHandlerTest
             CreatedAt = DateTime.UtcNow
         };
         context.TodoItems.Add(todoItem);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         HybridCache cache = CreateCache();
         IUserContext userContext = Substitute.For<IUserContext>();
@@ -57,7 +57,7 @@ public sealed class GetTodoByIdQueryHandlerTests : BaseHandlerTest
         var query = new GetTodoByIdQuery(todoItem.Id);
 
         // Act
-        Result<TodoResponse> result = await handler.Handle(query, CancellationToken.None);
+        Result<TodoResponse> result = await handler.Handle(query, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();

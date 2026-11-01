@@ -10,7 +10,7 @@ public sealed class LoginValidationTests(IntegrationTestWebAppFactory factory) :
     {
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
             "users/login",
-            new { email = "not-an-email", password = "Password123" });
+            new { email = "not-an-email", password = "Password123" }, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -20,7 +20,7 @@ public sealed class LoginValidationTests(IntegrationTestWebAppFactory factory) :
     {
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
             "users/login",
-            new { email = "test@example.com", password = string.Empty });
+            new { email = "test@example.com", password = string.Empty }, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }

@@ -11,7 +11,7 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
     public async Task GetTodo_Should_ReturnUnauthorized_WhenTokenIsMissing()
     {
         // Act
-        HttpResponseMessage response = await HttpClient.GetAsync($"todos/{Guid.NewGuid()}");
+        HttpResponseMessage response = await HttpClient.GetAsync($"todos/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -33,17 +33,17 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
         };
 
         // Act
-        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync("todos", createRequest);
+        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync("todos", createRequest, TestContext.Current.CancellationToken);
 
         // Assert
         createResponse.EnsureSuccessStatusCode();
-        Guid todoId = await createResponse.Content.ReadFromJsonAsync<Guid>();
+        Guid todoId = await createResponse.Content.ReadFromJsonAsync<Guid>(TestContext.Current.CancellationToken);
         todoId.ShouldNotBe(Guid.Empty);
 
-        HttpResponseMessage getResponse = await HttpClient.GetAsync($"todos/{todoId}");
+        HttpResponseMessage getResponse = await HttpClient.GetAsync($"todos/{todoId}", TestContext.Current.CancellationToken);
         getResponse.EnsureSuccessStatusCode();
 
-        TodoDto? todo = await getResponse.Content.ReadFromJsonAsync<TodoDto>();
+        TodoDto? todo = await getResponse.Content.ReadFromJsonAsync<TodoDto>(TestContext.Current.CancellationToken);
         todo!.Id.ShouldBe(todoId);
         todo.UserId.ShouldBe(userId);
         todo.Description.ShouldBe("Integration test todo");
@@ -64,19 +64,19 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
             labels = Array.Empty<string>(),
             priority = 1
         };
-        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync("todos", createRequest);
+        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync("todos", createRequest, TestContext.Current.CancellationToken);
         createResponse.EnsureSuccessStatusCode();
-        Guid todoId = await createResponse.Content.ReadFromJsonAsync<Guid>();
+        Guid todoId = await createResponse.Content.ReadFromJsonAsync<Guid>(TestContext.Current.CancellationToken);
 
         // Act
-        HttpResponseMessage completeResponse = await HttpClient.PutAsync($"todos/{todoId}/complete", null);
+        HttpResponseMessage completeResponse = await HttpClient.PutAsync($"todos/{todoId}/complete", null, TestContext.Current.CancellationToken);
 
         // Assert
         completeResponse.EnsureSuccessStatusCode();
 
-        HttpResponseMessage getResponse = await HttpClient.GetAsync($"todos/{todoId}");
+        HttpResponseMessage getResponse = await HttpClient.GetAsync($"todos/{todoId}", TestContext.Current.CancellationToken);
         getResponse.EnsureSuccessStatusCode();
-        TodoDto? todo = await getResponse.Content.ReadFromJsonAsync<TodoDto>();
+        TodoDto? todo = await getResponse.Content.ReadFromJsonAsync<TodoDto>(TestContext.Current.CancellationToken);
         todo!.IsCompleted.ShouldBeTrue();
     }
 
@@ -123,11 +123,11 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
         await PostTodoAsync(createRequest, Guid.NewGuid().ToString());
 
         // Act
-        HttpResponseMessage response = await HttpClient.GetAsync($"todos?userId={userId}&page=1&pageSize=1");
+        HttpResponseMessage response = await HttpClient.GetAsync($"todos?userId={userId}&page=1&pageSize=1", TestContext.Current.CancellationToken);
 
         // Assert
         response.EnsureSuccessStatusCode();
-        PagedTodos? page = await response.Content.ReadFromJsonAsync<PagedTodos>();
+        PagedTodos? page = await response.Content.ReadFromJsonAsync<PagedTodos>(TestContext.Current.CancellationToken);
         page!.Items.Count.ShouldBe(1);
         page.TotalCount.ShouldBeGreaterThanOrEqualTo(2);
         page.HasNextPage.ShouldBeTrue();

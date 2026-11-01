@@ -27,7 +27,7 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new LoginUserCommand(Email, Password),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -53,7 +53,7 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new LoginUserCommand(Email, Password),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -82,14 +82,14 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new LoginUserCommand(Email, Password),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
         result.Value.AccessToken.ShouldBe("access-token");
         result.Value.RefreshToken.ShouldBe("refresh-token");
 
-        RefreshToken refreshToken = await context.RefreshTokens.SingleAsync();
+        RefreshToken refreshToken = await context.RefreshTokens.SingleAsync(TestContext.Current.CancellationToken);
         refreshToken.Token.ShouldBe("refresh-token");
         refreshToken.ExpiresOnUtc.ShouldBeGreaterThan(dateTimeProvider.UtcNow);
     }
@@ -105,6 +105,6 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
             PasswordHash = "hash"
         });
 
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 }

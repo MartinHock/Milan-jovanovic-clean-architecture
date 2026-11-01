@@ -23,7 +23,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new RefreshTokenCommand("missing-token"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -49,7 +49,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new RefreshTokenCommand("expired-token"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -76,14 +76,14 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new RefreshTokenCommand("old-token"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
         result.Value.AccessToken.ShouldBe("new-access-token");
         result.Value.RefreshToken.ShouldBe("new-refresh-token");
 
-        RefreshToken stored = await context.RefreshTokens.SingleAsync();
+        RefreshToken stored = await context.RefreshTokens.SingleAsync(TestContext.Current.CancellationToken);
         stored.Token.ShouldBe("new-refresh-token");
         stored.ExpiresOnUtc.ShouldBeGreaterThan(now);
     }
@@ -109,6 +109,6 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
             User = user
         });
 
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 }
