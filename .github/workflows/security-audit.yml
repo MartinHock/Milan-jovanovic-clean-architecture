@@ -26,7 +26,7 @@ jobs:
           -p:NuGetAudit=true
           -p:NuGetAuditMode=all
           -p:NuGetAuditLevel=high
-          -p:WarningsAsErrors=NU1903,NU1904
+          -p:WarningsAsErrors=NU1903%3BNU1904
 
   container-audit:
     name: Container image vulnerability audit
