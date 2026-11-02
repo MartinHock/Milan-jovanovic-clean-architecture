@@ -1,0 +1,39 @@
+﻿name: clean-architecture-observability-e2e
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: clean-architecture
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clean-architecture"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  observability:
+    image: grafana/otel-lgtm:0.29.1
+    ports:
+      - "127.0.0.1:3300:3000"
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+
+  web-api:
+    build:
+      context: ..
+      dockerfile: src/Web.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ASPNETCORE_HTTPS_PORTS: ""
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://observability:4317
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=clean-architecture;Username=postgres;Password=postgres;Include Error Detail=true
+      Serilog__WriteTo__1__Args__endpoint: http://observability:4317
+    ports:
+      - "127.0.0.1:5500:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      observability:
+        condition: service_started
