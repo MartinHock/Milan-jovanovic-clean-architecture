@@ -74,6 +74,56 @@ public sealed class ObservabilityIntegrationTests
                 result.GetProperty("value")[1].GetString() == "42"));
     }
 
+    [Fact]
+    [Trait("Category", "Observability")]
+    public async Task RunningWebApi_Should_Export_Correlated_Logs_Traces_And_HttpMetrics()
+    {
+        if (Environment.GetEnvironmentVariable("RUN_OBSERVABILITY_TESTS") != "1")
+        {
+            return;
+        }
+
+        string apiUrl = Environment.GetEnvironmentVariable("OBSERVABILITY_API_URL")
+            ?? "http://localhost:5500";
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        string requestId = Guid.NewGuid().ToString("N");
+        using HttpResponseMessage health = await client.GetAsync(
+            $"{apiUrl.TrimEnd('/')}/health?proof={requestId}", TestContext.Current.CancellationToken);
+        health.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        string traceId = string.Empty;
+        string logQuery = Uri.EscapeDataString($"{{service_name=\"Web.Api\"}} |= \"{requestId}\"");
+        await WaitForAsync(client, $"/api/datasources/proxy/uid/loki/loki/api/v1/query_range?query={logQuery}&limit=50", root =>
+        {
+            foreach (JsonElement stream in root.GetProperty("data").GetProperty("result").EnumerateArray())
+            {
+                JsonElement labels = stream.GetProperty("stream");
+                if (labels.TryGetProperty("trace_id", out JsonElement id) &&
+                    id.GetString() is { Length: 32 } value &&
+                    stream.GetProperty("values").EnumerateArray().Any(v =>
+                        v[1].GetString()?.Contains(requestId, StringComparison.Ordinal) == true))
+                {
+                    traceId = value;
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        await WaitForAsync(client, $"/api/datasources/proxy/uid/tempo/api/traces/{traceId}", root =>
+            root.GetProperty("batches").EnumerateArray().Any(batch =>
+                batch.GetProperty("scopeSpans").EnumerateArray().Any(scope =>
+                    scope.GetProperty("spans").EnumerateArray().Any(span =>
+                        span.GetProperty("traceId").GetString() == Convert.ToBase64String(Convert.FromHexString(traceId))))));
+
+        string metricQuery = Uri.EscapeDataString(
+            "http_server_request_duration_seconds_count{service_name=\"Web.Api\",http_route=\"health\",http_response_status_code=\"200\"}");
+        await WaitForAsync(client, $"/api/datasources/proxy/uid/prometheus/api/v1/query?query={metricQuery}", root =>
+            root.GetProperty("data").GetProperty("result").EnumerateArray().Any(series =>
+                double.TryParse(series.GetProperty("value")[1].GetString(),
+                    NumberStyles.Float, CultureInfo.InvariantCulture, out double count) && count >= 1));
+    }
     private static async Task WaitForAsync(HttpClient client, string path, Func<JsonElement, bool> condition)
     {
         for (int attempt = 0; attempt < 15; attempt++)
