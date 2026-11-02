@@ -22,8 +22,8 @@ A pragmatic Clean Architecture starter for **.NET 10**. Batteries included, opin
   - **OpenTelemetry** tracing and metrics (ASP.NET Core, HTTP, Npgsql, runtime)
   - Global exception handling and `ProblemDetails`
   - Swagger / OpenAPI with JWT support
-- **Seq** for searching and analyzing structured logs
-  - Seq is available at http://localhost:8081 by default
+- **Grafana, Loki, Tempo and Prometheus** for logs, traces and metrics
+  - Grafana is available at http://localhost:3300 by default (port 3000 is reserved locally)
 - **Testing** projects
   - Architecture testing (`ArchitectureTests`)
   - Unit testing (`Application.UnitTests`)
@@ -32,7 +32,7 @@ A pragmatic Clean Architecture starter for **.NET 10**. Batteries included, opin
 ## Getting started
 
 ```bash
-docker compose up -d        # PostgreSQL + Seq
+docker compose up -d        # PostgreSQL + Grafana/Loki/Tempo/Prometheus
 dotnet run --project src/Web.Api
 ```
 

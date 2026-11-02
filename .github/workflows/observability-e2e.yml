@@ -1,0 +1,63 @@
+﻿name: Observability E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/observability-e2e.yml'
+      - '.github/observability-e2e.compose.yml'
+      - 'docker-compose*.yml'
+      - 'Directory.Packages.props'
+      - 'src/**'
+      - 'tests/IntegrationTests/**'
+
+jobs:
+  observability-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore integration tests
+        run: dotnet restore tests/IntegrationTests/IntegrationTests.csproj
+
+      - name: Build integration tests
+        run: dotnet build tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-restore
+
+      - name: Start isolated application and observability stack
+        run: docker compose -f .github/observability-e2e.compose.yml up --build -d --wait
+
+      - name: Wait for Web API and Grafana readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:5500/health > /dev/null && curl --fail --silent http://127.0.0.1:3300/api/health > /dev/null; then
+              echo 'Web API and Grafana are ready'
+              exit 0
+            fi
+            sleep 3
+          done
+          echo 'Readiness timeout' >&2
+          exit 1
+
+      - name: Verify OTLP and real Web API telemetry end-to-end
+        env:
+          RUN_OBSERVABILITY_TESTS: '1'
+          OBSERVABILITY_API_URL: http://127.0.0.1:5500
+        run: dotnet test tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-restore --no-build
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose -f .github/observability-e2e.compose.yml logs --tail 150
+
+      - name: Tear down isolated stack
+        if: always()
+        run: docker compose -f .github/observability-e2e.compose.yml down --volumes --remove-orphans
