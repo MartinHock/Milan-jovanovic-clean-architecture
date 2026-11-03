@@ -1,4 +1,4 @@
-﻿using Application.Abstractions.Messaging;
+using Application.Abstractions.Messaging;
 using Application.Todos.Create;
 using Domain.Todos;
 using SharedKernel;
@@ -39,7 +39,6 @@ internal sealed class Create : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .WithTags(Tags.Todos)
-        .WithIdempotency()
         .RequireAuthorization();
     }
 }

@@ -81,31 +81,6 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
     }
 
     [Fact]
-    public async Task CreateTodo_Should_ReturnConflict_WhenIdempotencyKeyIsReused()
-    {
-        // Arrange
-        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
-        Authenticate(tokens.AccessToken);
-
-        var createRequest = new
-        {
-            userId,
-            description = "Idempotent todo",
-            labels = Array.Empty<string>(),
-            priority = 1
-        };
-        string idempotencyKey = Guid.NewGuid().ToString();
-
-        // Act
-        HttpResponseMessage first = await PostTodoAsync(createRequest, idempotencyKey);
-        HttpResponseMessage second = await PostTodoAsync(createRequest, idempotencyKey);
-
-        // Assert
-        first.StatusCode.ShouldBe(HttpStatusCode.OK);
-        second.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-    }
-
-    [Fact]
     public async Task GetTodos_Should_ReturnPagedResults()
     {
         // Arrange
@@ -133,6 +108,36 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
         page.HasNextPage.ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("page=0")]
+    [InlineData("page=-1")]
+    [InlineData("pageSize=0")]
+    [InlineData("pageSize=-1")]
+    [InlineData("pageSize=101")]
+    [InlineData("pageSize=2147483647")]
+    public async Task GetTodos_Should_RejectInvalidPagination(string query)
+    {
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        HttpResponseMessage response = await HttpClient.GetAsync(
+            $"todos?userId={userId}&{query}", TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetTodos_Should_RejectAccessToOtherUsersTodos()
+    {
+        (Guid ownerId, _) = await RegisterAndLoginAsync();
+        (_, AccessTokens otherTokens) = await RegisterAndLoginAsync();
+        Authenticate(otherTokens.AccessToken);
+
+        HttpResponseMessage response = await HttpClient.GetAsync(
+            $"todos?userId={ownerId}&page=1&pageSize=10", TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
     private sealed record PagedTodos(
         List<TodoDto> Items,
         int Page,

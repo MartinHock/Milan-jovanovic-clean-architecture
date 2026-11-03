@@ -21,6 +21,11 @@ internal sealed class Get : IEndpoint
             IQueryHandler<GetTodosQuery, PagedList<TodoResponse>> handler,
             CancellationToken cancellationToken) =>
         {
+            if (page is < 1 || pageSize is < 1 or > 100)
+            {
+                return Results.BadRequest("Page must be at least 1 and pageSize must be between 1 and 100.");
+            }
+
             var query = new GetTodosQuery(
                 userId,
                 search,
@@ -31,7 +36,17 @@ internal sealed class Get : IEndpoint
 
             Result<PagedList<TodoResponse>> result = await handler.Handle(query, cancellationToken);
 
-            return result.Match(Results.Ok, CustomResults.Problem);
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result.Value);
+            }
+
+            if (result.Error.Code == "Users.Unauthorized")
+            {
+                return Results.Forbid();
+            }
+
+            return CustomResults.Problem(result);
         })
         .WithTags(Tags.Todos)
         .RequireAuthorization();
