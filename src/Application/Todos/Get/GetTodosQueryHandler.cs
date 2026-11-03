@@ -33,6 +33,9 @@ internal sealed class GetTodosQueryHandler(IApplicationDbContext context, IUserC
             ? todosQuery.OrderByDescending(GetSortProperty(query.SortColumn))
             : todosQuery.OrderBy(GetSortProperty(query.SortColumn));
 
+        // A unique tie-breaker makes offset pagination deterministic for equal sort values.
+        todosQuery = ((IOrderedQueryable<TodoItem>)todosQuery).ThenBy(todoItem => todoItem.Id);
+
         IQueryable<TodoResponse> todoResponsesQuery = todosQuery
             .Select(todoItem => new TodoResponse
             {

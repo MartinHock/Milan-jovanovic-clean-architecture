@@ -12,7 +12,7 @@ public sealed class PagedList<T>
 
     public int TotalCount { get; init; }
 
-    public bool HasNextPage => Page * PageSize < TotalCount;
+    public bool HasNextPage => (long)Page * PageSize < TotalCount;
 
     public bool HasPreviousPage => Page > 1;
 
@@ -22,12 +22,15 @@ public sealed class PagedList<T>
         int pageSize,
         CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(page);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pageSize);
+
         int totalCount = await query.CountAsync(cancellationToken);
 
-        List<T> items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
+        long offset = ((long)page - 1) * pageSize;
+        List<T> items = offset >= totalCount
+            ? []
+            : await query.Skip((int)offset).Take(pageSize).ToListAsync(cancellationToken);
 
         return new PagedList<T>
         {
