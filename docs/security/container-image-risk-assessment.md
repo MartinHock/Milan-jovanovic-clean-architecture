@@ -1,0 +1,27 @@
+﻿# Container image security assessment — 2026-11-04
+
+Scope: PR #16, commit `e0ac492` before the PostgreSQL loopback-binding change.
+
+## Evidence
+
+- [GitHub Security Audit #8](https://github.com/MartinHock/Milan-jovanovic-clean-architecture/actions/runs/41812298399)
+- PostgreSQL image: `postgres:17`; Trivy reports 26 library vulnerabilities (25 HIGH, 1 CRITICAL) and one HIGH secret finding at `/etc/ssl/private/ssl-cert-snakeoil.key`. The CRITICAL finding is `CVE-2025-68121` in Go `crypto/tls` (`stdlib` v1.24.6; fixes reported in 1.24.13 / 1.25.7).
+- Grafana image: `grafana/otel-lgtm:0.39.0`; Trivy reports multiple HIGH findings in Go components (including `CVE-2026-111943`, `CVE-2026-78667`, `CVE-2026-78669` and `CVE-2026-97031`). Trivy tables refer to multiple executable targets: individual table counts must **not** be interpreted as an image-wide total.
+- Application image and NuGet audits pass. Build and observability E2E pass with LGTM 0.39.0.
+
+## Exposure and controls
+
+- Local `docker-compose.yml` previously published PostgreSQL on all host interfaces (`5432:5432`) with demo credentials. This change restricts publication to `127.0.0.1:5432:5432`. The CI E2E compose file does not publish the database port.
+- Grafana UI and OTLP ports are bound to `127.0.0.1` in the local and CI compose configurations.
+- Loopback binding reduces network exposure; it does not remove image vulnerabilities, protect against local attackers, or make hard-coded demo credentials suitable for non-development deployments.
+- A vulnerability in a bundled Go binary is not proof of a remotely exploitable PostgreSQL server vulnerability. The affected executable and reachable code paths must be established before lowering risk classification.
+
+## Outstanding evidence / release gate
+
+1. Resolve immutable registry image digests for the exact images and platform used by GitHub Actions; capture Trivy version, vulnerability database timestamp and machine-readable JSON/SARIF reports.
+2. Map each Go library finding to the actual executable file in the image, its runtime invocation, reachable protocol surface and available upstream fix.
+3. Verify whether `ssl-cert-snakeoil.key` is a packaged sample key, how it is used, and whether the same key is shared across deployments. Do not classify it as harmless without checking.
+4. Check patched upstream image versions and rescan before considering any narrowly scoped, documented exception.
+5. Keep HIGH/CRITICAL blocking enabled. No security waiver or merge is authorized by this assessment.
+
+**Evidence limitation:** The local Docker daemon was unavailable during this assessment; immutable digests and binary-to-CVE mapping were not independently verified. This is an interim triage, not a completed exploitability assessment.
