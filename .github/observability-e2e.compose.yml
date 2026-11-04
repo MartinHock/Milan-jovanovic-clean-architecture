@@ -13,7 +13,7 @@ services:
       retries: 30
 
   observability:
-    image: grafana/otel-lgtm:0.29.1
+    image: grafana/otel-lgtm:0.39.0
     ports:
       - "127.0.0.1:3300:3000"
       - "127.0.0.1:4317:4317"

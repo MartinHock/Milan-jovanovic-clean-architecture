@@ -51,7 +51,7 @@ jobs:
       - name: Scan Grafana LGTM image
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: 'grafana/otel-lgtm:0.29.1'
+          image-ref: 'grafana/otel-lgtm:0.39.0'
           format: table
           exit-code: '1'
           severity: 'HIGH,CRITICAL'
