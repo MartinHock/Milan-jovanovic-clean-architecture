@@ -25,3 +25,14 @@ Scope: PR #16, commit `e0ac492` before the PostgreSQL loopback-binding change.
 5. Keep HIGH/CRITICAL blocking enabled. No security waiver or merge is authorized by this assessment.
 
 **Evidence limitation:** The local Docker daemon was unavailable during this assessment; immutable digests and binary-to-CVE mapping were not independently verified. This is an interim triage, not a completed exploitability assessment.
+
+## Local binary verification (2026-11-04)
+
+Docker Engine 29.9.2, Linux/amd64. Local image digests:
+
+- `postgres:17`: `sha256:0027bef26712baaee437a4ea48fdf3d2d2e2bc5f0d81615374408ca320f3c7e3`
+- `grafana/otel-lgtm:0.39.0`: `sha256:4c8056c9c05fcb3c8fd93800e85334bfd79b4d0271b47a54a121a64af41fe1fe`
+
+In the PostgreSQL image, `/usr/local/bin/gosu --version` prints `1.19 (go1.24.6 on linux/amd64; gc)`. A byte-string search also identifies `go1.24.6` in `gosu`; PostgreSQL's server executable is a separate file at `/usr/lib/postgresql/17/bin/postgres`. This is a concrete candidate for the Go stdlib CVEs, **not yet an exhaustive mapping of all Trivy findings**. The snakeoil private key exists at `/etc/ssl/private/ssl-cert-snakeoil.key`; its use and exposure remain unverified.
+
+The Grafana image is now locally available. Component-to-binary CVE mapping, attack-path validation and a reproducible local Trivy JSON report remain open. No finding has been waived.
