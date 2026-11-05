@@ -1,0 +1,77 @@
+name: Security Audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  nuget-audit:
+    name: NuGet direct and transitive audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.x'
+      - name: Restore and reject high or critical NuGet advisories
+        run: >-
+          dotnet restore CleanArchitecture.slnx
+          -p:NuGetAudit=true
+          -p:NuGetAuditMode=all
+          -p:NuGetAuditLevel=high
+          -p:WarningsAsErrors=NU1903%3BNU1904
+
+  postgres-image-audit:
+    name: PostgreSQL image vulnerability audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Scan PostgreSQL image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'postgres:17'
+          format: table
+          exit-code: '1'
+          severity: 'HIGH,CRITICAL'
+          vuln-type: 'os,library'
+          ignore-unfixed: true
+
+  grafana-image-audit:
+    name: Grafana LGTM image vulnerability audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Scan Grafana LGTM image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'grafana/otel-lgtm:0.39.0'
+          format: table
+          exit-code: '1'
+          severity: 'HIGH,CRITICAL'
+          vuln-type: 'os,library'
+          ignore-unfixed: true
+
+  application-image-audit:
+    name: Application image vulnerability audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build application image
+        run: docker build --pull -f src/Web.Api/Dockerfile -t cleanarchitecture-security-audit:local .
+      - name: Scan application image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'cleanarchitecture-security-audit:local'
+          format: table
+          exit-code: '1'
+          severity: 'HIGH,CRITICAL'
+          vuln-type: 'os,library'
+          ignore-unfixed: true

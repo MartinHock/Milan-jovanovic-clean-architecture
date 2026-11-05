@@ -1,4 +1,4 @@
-﻿using Application.Abstractions.Messaging;
+using Application.Abstractions.Messaging;
 using Application.Todos.Create;
 using Domain.Todos;
 using SharedKernel;

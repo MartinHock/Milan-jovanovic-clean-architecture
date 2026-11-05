@@ -32,7 +32,7 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
         var handler = new CreateTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(Command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -51,7 +51,7 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
         var handler = new CreateTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(Command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -81,14 +81,12 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
         var handler = new CreateTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(Command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        TodoItem todoItem = await context.TodoItems.SingleAsync(
-            t => t.Id == result.Value,
-            TestContext.Current.CancellationToken);
+        TodoItem todoItem = await context.TodoItems.SingleAsync(t => t.Id == result.Value, TestContext.Current.CancellationToken);
         todoItem.Description.ShouldBe("Write unit tests");
         todoItem.UserId.ShouldBe(UserId);
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemCreatedDomainEvent);

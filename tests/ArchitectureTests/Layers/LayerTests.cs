@@ -1,7 +1,5 @@
-﻿using NetArchTest.Rules;
+using NetArchTest.Rules;
 using Shouldly;
-using Xunit;
-using TestResult = NetArchTest.Rules.TestResult;
 
 namespace ArchitectureTests.Layers;
 
@@ -10,7 +8,7 @@ public class LayerTests : BaseTest
     [Fact]
     public void Domain_Should_NotHaveDependencyOnApplication()
     {
-        TestResult result = Types.InAssembly(DomainAssembly)
+        NetArchTest.Rules.TestResult result = Types.InAssembly(DomainAssembly)
             .Should()
             .NotHaveDependencyOn("Application")
             .GetResult();
@@ -21,7 +19,7 @@ public class LayerTests : BaseTest
     [Fact]
     public void DomainLayer_ShouldNotHaveDependencyOn_InfrastructureLayer()
     {
-        TestResult result = Types.InAssembly(DomainAssembly)
+        NetArchTest.Rules.TestResult result = Types.InAssembly(DomainAssembly)
             .Should()
             .NotHaveDependencyOn(InfrastructureAssembly.GetName().Name)
             .GetResult();
@@ -32,7 +30,7 @@ public class LayerTests : BaseTest
     [Fact]
     public void DomainLayer_ShouldNotHaveDependencyOn_PresentationLayer()
     {
-        TestResult result = Types.InAssembly(DomainAssembly)
+        NetArchTest.Rules.TestResult result = Types.InAssembly(DomainAssembly)
             .Should()
             .NotHaveDependencyOn(PresentationAssembly.GetName().Name)
             .GetResult();
@@ -43,7 +41,7 @@ public class LayerTests : BaseTest
     [Fact]
     public void ApplicationLayer_ShouldNotHaveDependencyOn_InfrastructureLayer()
     {
-        TestResult result = Types.InAssembly(ApplicationAssembly)
+        NetArchTest.Rules.TestResult result = Types.InAssembly(ApplicationAssembly)
             .Should()
             .NotHaveDependencyOn(InfrastructureAssembly.GetName().Name)
             .GetResult();
@@ -54,7 +52,7 @@ public class LayerTests : BaseTest
     [Fact]
     public void ApplicationLayer_ShouldNotHaveDependencyOn_PresentationLayer()
     {
-        TestResult result = Types.InAssembly(ApplicationAssembly)
+        NetArchTest.Rules.TestResult result = Types.InAssembly(ApplicationAssembly)
             .Should()
             .NotHaveDependencyOn(PresentationAssembly.GetName().Name)
             .GetResult();
@@ -65,7 +63,7 @@ public class LayerTests : BaseTest
     [Fact]
     public void InfrastructureLayer_ShouldNotHaveDependencyOn_PresentationLayer()
     {
-        TestResult result = Types.InAssembly(InfrastructureAssembly)
+        NetArchTest.Rules.TestResult result = Types.InAssembly(InfrastructureAssembly)
             .Should()
             .NotHaveDependencyOn(PresentationAssembly.GetName().Name)
             .GetResult();

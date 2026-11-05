@@ -26,7 +26,7 @@ public sealed class CompleteTodoCommandHandlerTests : BaseHandlerTest
         var command = new CompleteTodoCommand(Guid.NewGuid());
 
         // Act
-        Result result = await handler.Handle(command, CancellationToken.None);
+        Result result = await handler.Handle(command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -49,7 +49,7 @@ public sealed class CompleteTodoCommandHandlerTests : BaseHandlerTest
         var command = new CompleteTodoCommand(todoItemId);
 
         // Act
-        Result result = await handler.Handle(command, CancellationToken.None);
+        Result result = await handler.Handle(command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -74,14 +74,12 @@ public sealed class CompleteTodoCommandHandlerTests : BaseHandlerTest
         var command = new CompleteTodoCommand(todoItemId);
 
         // Act
-        Result result = await handler.Handle(command, CancellationToken.None);
+        Result result = await handler.Handle(command, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        TodoItem todoItem = await context.TodoItems.SingleAsync(
-            t => t.Id == todoItemId,
-            TestContext.Current.CancellationToken);
+        TodoItem todoItem = await context.TodoItems.SingleAsync(t => t.Id == todoItemId, TestContext.Current.CancellationToken);
         todoItem.IsCompleted.ShouldBeTrue();
         todoItem.CompletedAt.ShouldBe(completedAt);
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemCompletedDomainEvent);

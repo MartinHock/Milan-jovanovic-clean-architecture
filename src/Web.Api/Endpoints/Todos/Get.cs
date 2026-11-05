@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Messaging;
+using Application.Abstractions.Messaging;
+using Application.Abstractions.Pagination;
 using Application.Todos.Get;
 using SharedKernel;
 using Web.Api.Extensions;
@@ -12,14 +13,40 @@ internal sealed class Get : IEndpoint
     {
         app.MapGet("todos", async (
             Guid userId,
-            IQueryHandler<GetTodosQuery, List<TodoResponse>> handler,
+            string? search,
+            string? sortColumn,
+            string? sortOrder,
+            int? page,
+            int? pageSize,
+            IQueryHandler<GetTodosQuery, PagedList<TodoResponse>> handler,
             CancellationToken cancellationToken) =>
         {
-            var query = new GetTodosQuery(userId);
+            if (page is < 1 || pageSize is < 1 or > 100)
+            {
+                return Results.BadRequest("Page must be at least 1 and pageSize must be between 1 and 100.");
+            }
 
-            Result<List<TodoResponse>> result = await handler.Handle(query, cancellationToken);
+            var query = new GetTodosQuery(
+                userId,
+                search,
+                sortColumn,
+                sortOrder,
+                page ?? 1,
+                pageSize ?? 10);
 
-            return result.Match(Results.Ok, CustomResults.Problem);
+            Result<PagedList<TodoResponse>> result = await handler.Handle(query, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result.Value);
+            }
+
+            if (result.Error.Code == "Users.Unauthorized")
+            {
+                return Results.Forbid();
+            }
+
+            return CustomResults.Problem(result);
         })
         .WithTags(Tags.Todos)
         .RequireAuthorization();
