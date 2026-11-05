@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Build application image
-        run: docker build -f src/Web.Api/Dockerfile -t cleanarchitecture-security-audit:local .
+        run: docker build --pull -f src/Web.Api/Dockerfile -t cleanarchitecture-security-audit:local .
       - name: Scan application image
         uses: aquasecurity/trivy-action@v0.36.0
         with:
