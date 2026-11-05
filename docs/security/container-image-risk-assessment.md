@@ -36,3 +36,12 @@ Docker Engine 29.9.2, Linux/amd64. Local image digests:
 In the PostgreSQL image, `/usr/local/bin/gosu --version` prints `1.19 (go1.24.6 on linux/amd64; gc)`. A byte-string search also identifies `go1.24.6` in `gosu`; PostgreSQL's server executable is a separate file at `/usr/lib/postgresql/17/bin/postgres`. This is a concrete candidate for the Go stdlib CVEs, **not yet an exhaustive mapping of all Trivy findings**. The snakeoil private key exists at `/etc/ssl/private/ssl-cert-snakeoil.key`; its use and exposure remain unverified.
 
 The Grafana image is now locally available. Component-to-binary CVE mapping, attack-path validation and a reproducible local Trivy JSON report remain open. No finding has been waived.
+
+## Local Trivy 0.67.2 JSON scan (2026-11-05)
+
+Reproduction: Trivy Docker image `aquasec/trivy:0.67.2`, `image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --format json`, scanning the locally cached Linux/amd64 images. Reports retained locally in untracked `.artifacts/security/` (not committed). Counts are vulnerability *occurrences per target*, not distinct CVE IDs.
+
+- PostgreSQL: 148 occurrences: Debian 13.5 OS target 122 (110 HIGH, 12 CRITICAL); `usr/local/bin/gosu` 26 (25 HIGH, 1 CRITICAL). The earlier GitHub CI result showed zero OS CVEs and a Debian 13.7 target. **Do not equate the local cached image with the exact CI image** without verifying its digest and platform; a mutable `postgres:17` tag can move. The Go findings are specifically mapped by Trivy to `gosu`, invoked by the entrypoint to drop privileges. No remotely reachable vulnerable Go TLS code path has been demonstrated.
+- Grafana LGTM: 50 HIGH occurrences across 16 Go binary targets, zero CRITICAL. These include bundled Grafana datasource plugins, `obi`, `tempo`, `tempo-cli`, `tempo-query`, `otelcol-contrib` and `pyroscope`. Presence in an image does not prove runtime activation or exploitability; some binaries are runtime services and must not be automatically exempted.
+
+Before making a waiver or comparing with CI, collect the CI-resolved image digests and vulnerability DB metadata; identify whether each vulnerable binary is executed and whether its affected code path is reachable. The local reports include no secret scanner because this reproduction used `--scanners vuln`; the earlier CI secret finding is not cleared by this scan.
