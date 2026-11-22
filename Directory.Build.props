@@ -8,7 +8,7 @@
 	You will also need to update the Dockerfile to use .NET 9 instead of .NET 10 - both are in Web.Api project.-->
 	<!--<TargetFramework>net9.0</TargetFramework>-->
 
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
