@@ -33,10 +33,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
+      - uses: actions/checkout@v5
+      - name: Build PostgreSQL image with patched Debian zlib
+        run: docker build --pull -f docker/postgres/Dockerfile -t cleanarchitecture-postgres:17-zlib-patched docker/postgres
       - name: Scan PostgreSQL image
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: 'postgres:17'
+          image-ref: 'cleanarchitecture-postgres:17-zlib-patched'
           format: table
           exit-code: '1'
           severity: 'HIGH,CRITICAL'
