@@ -9,6 +9,9 @@ A skill pack that teaches Claude Code the conventions of the Clean Architecture 
 | **add-feature** | `/add-feature archive a todo item` | Scaffolds a complete vertical slice: command/query, handler, validator, endpoint, and unit + validator + integration tests. |
 | **add-entity** | `/add-entity Project with a name and owner` | Adds a domain entity end to end: entity, error catalog, domain events, EF configuration, DbContext wiring, migration. |
 | **add-tests** | `/add-tests CopyTodoCommand` | Backfills handler, validator, and integration tests for existing use cases. |
+| **add-migration** | `/add-migration Add_Projects` | Creates and applies an EF Core migration (Infrastructure project, Web.Api as startup). |
+| **add-background-job** | `/add-background-job delete expired refresh tokens hourly` | Adds a scheduled `BackgroundService` that safely resolves scoped services per run. |
+| **bootstrap** | `/bootstrap Acme.Billing` | Renames the solution to your app and strips the sample Todos feature (keeps Users + auth). |
 | **ca-review** | `/ca-review` | Reviews pending changes against the template's conventions: layer boundaries, error handling, security, caching, and test coverage. |
 
 You don't have to invoke them explicitly — once installed, Claude Code picks the right skill automatically when you say things like "add an endpoint to snooze a todo."
@@ -26,6 +29,9 @@ your-project/
         ├── add-feature/
         ├── add-entity/
         ├── add-tests/
+        ├── add-migration/
+        ├── add-background-job/
+        ├── bootstrap/
         └── ca-review/
 ```
 

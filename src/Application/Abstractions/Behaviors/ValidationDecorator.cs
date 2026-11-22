@@ -1,4 +1,4 @@
-﻿using Application.Abstractions.Messaging;
+using Application.Abstractions.Messaging;
 using FluentValidation;
 using FluentValidation.Results;
 using SharedKernel;
@@ -15,7 +15,7 @@ internal static class ValidationDecorator
     {
         public async Task<Result<TResponse>> Handle(TCommand command, CancellationToken cancellationToken)
         {
-            ValidationFailure[] validationFailures = await ValidateAsync(command, validators);
+            ValidationFailure[] validationFailures = await ValidateAsync(command, validators, cancellationToken);
 
             if (validationFailures.Length == 0)
             {
@@ -34,7 +34,7 @@ internal static class ValidationDecorator
     {
         public async Task<Result> Handle(TCommand command, CancellationToken cancellationToken)
         {
-            ValidationFailure[] validationFailures = await ValidateAsync(command, validators);
+            ValidationFailure[] validationFailures = await ValidateAsync(command, validators, cancellationToken);
 
             if (validationFailures.Length == 0)
             {
@@ -47,26 +47,26 @@ internal static class ValidationDecorator
 
     private static async Task<ValidationFailure[]> ValidateAsync<TCommand>(
         TCommand command,
-        IEnumerable<IValidator<TCommand>> validators)
+        IEnumerable<IValidator<TCommand>> validators,
+        CancellationToken cancellationToken)
     {
-        if (!validators.Any())
+        var failures = new List<ValidationFailure>();
+
+        foreach (IValidator<TCommand> validator in validators)
         {
-            return [];
+            cancellationToken.ThrowIfCancellationRequested();
+
+            ValidationResult result = await validator.ValidateAsync(
+                new ValidationContext<TCommand>(command), cancellationToken);
+
+            if (!result.IsValid)
+            {
+                failures.AddRange(result.Errors);
+            }
         }
 
-        var context = new ValidationContext<TCommand>(command);
-
-        ValidationResult[] validationResults = await Task.WhenAll(
-            validators.Select(validator => validator.ValidateAsync(context)));
-
-        ValidationFailure[] validationFailures = validationResults
-            .Where(validationResult => !validationResult.IsValid)
-            .SelectMany(validationResult => validationResult.Errors)
-            .ToArray();
-
-        return validationFailures;
+        return [.. failures];
     }
-
     private static ValidationError CreateValidationError(ValidationFailure[] validationFailures) =>
-        new(validationFailures.Select(f => Error.Problem(f.ErrorCode, f.ErrorMessage)).ToArray());
+        new([.. validationFailures.Select(f => Error.Problem(f.ErrorCode, f.ErrorMessage))]);
 }

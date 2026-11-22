@@ -1,4 +1,4 @@
-﻿name: Observability E2E
+name: Observability E2E
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.x'
+          dotnet-version: '11.x'
 
       - name: Restore integration tests
         run: dotnet restore tests/IntegrationTests/IntegrationTests.csproj

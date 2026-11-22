@@ -27,7 +27,7 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new LoginUserCommand(Email, Password),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -53,7 +53,7 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new LoginUserCommand(Email, Password),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -82,7 +82,7 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new LoginUserCommand(Email, Password),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();

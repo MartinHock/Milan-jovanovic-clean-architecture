@@ -33,11 +33,11 @@ public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program
 
     public async ValueTask InitializeAsync()
     {
-        await _dbContainer.StartAsync(TestContext.Current.CancellationToken);
+        await _dbContainer.StartAsync();
 
         using IServiceScope scope = Services.CreateScope();
         ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await dbContext.Database.MigrateAsync(TestContext.Current.CancellationToken);
+        await dbContext.Database.MigrateAsync();
     }
 
     public new async ValueTask DisposeAsync()

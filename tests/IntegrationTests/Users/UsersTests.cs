@@ -40,8 +40,7 @@ public sealed class UsersTests(IntegrationTestWebAppFactory factory) : BaseInteg
         // Act
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
             "users/login",
-            new { email, password = "WrongPassword1" },
-            TestContext.Current.CancellationToken);
+            new { email, password = "WrongPassword1" }, TestContext.Current.CancellationToken);
 
         // Assert
         response.IsSuccessStatusCode.ShouldBeFalse();
@@ -58,8 +57,7 @@ public sealed class UsersTests(IntegrationTestWebAppFactory factory) : BaseInteg
         // Act
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
             "users/refresh-token",
-            new { refreshToken = tokens.RefreshToken },
-            TestContext.Current.CancellationToken);
+            new { refreshToken = tokens.RefreshToken }, TestContext.Current.CancellationToken);
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -74,8 +72,7 @@ public sealed class UsersTests(IntegrationTestWebAppFactory factory) : BaseInteg
         // Act
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
             "users/refresh-token",
-            new { refreshToken = "this-token-does-not-exist" },
-            TestContext.Current.CancellationToken);
+            new { refreshToken = "this-token-does-not-exist" }, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);

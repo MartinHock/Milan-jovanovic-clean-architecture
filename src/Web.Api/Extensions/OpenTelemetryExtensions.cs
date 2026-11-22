@@ -24,8 +24,8 @@ internal static class OpenTelemetryExtensions
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation());
 
-        // Export to any OTLP-compatible backend (Aspire dashboard, Jaeger, Grafana, etc.)
-        // when an endpoint is configured via the standard OTEL_EXPORTER_OTLP_ENDPOINT variable.
+        // Ship traces, metrics, and logs to any OTLP backend (the bundled Grafana/Tempo/Loki
+        // stack, the Aspire dashboard, Jaeger, ...) when OTEL_EXPORTER_OTLP_ENDPOINT is set.
         if (!string.IsNullOrWhiteSpace(configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
         {
             services.AddOpenTelemetry().UseOtlpExporter();

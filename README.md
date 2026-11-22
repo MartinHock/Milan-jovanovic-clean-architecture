@@ -21,9 +21,10 @@ A pragmatic Clean Architecture starter for **.NET 10**. Batteries included, opin
   - **Rate limiting** (configurable global + authentication policies)
   - **OpenTelemetry** tracing and metrics (ASP.NET Core, HTTP, Npgsql, runtime)
   - Global exception handling and `ProblemDetails`
-  - Swagger / OpenAPI with JWT support
-- **Grafana, Loki, Tempo and Prometheus** for logs, traces and metrics
-  - Grafana is available at http://localhost:3300 by default (port 3000 is reserved locally)
+  - Scalar API reference (OpenAPI) with JWT support
+- **Grafana + Loki + Tempo + Prometheus** for logs, traces, and metrics, via the
+  bundled `grafana/otel-lgtm` image (the app ships telemetry over OTLP)
+  - Grafana is available at http://localhost:3000 by default
 - **Testing** projects
   - Architecture testing (`ArchitectureTests`)
   - Unit testing (`Application.UnitTests`)
@@ -32,7 +33,7 @@ A pragmatic Clean Architecture starter for **.NET 10**. Batteries included, opin
 ## Getting started
 
 ```bash
-docker compose up -d        # PostgreSQL + Grafana/Loki/Tempo/Prometheus
+docker compose up -d        # PostgreSQL + Grafana/Loki/Tempo
 dotnet run --project src/Web.Api
 ```
 

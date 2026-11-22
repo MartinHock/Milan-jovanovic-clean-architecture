@@ -27,26 +27,20 @@ public abstract class BaseIntegrationTest
             password = "Password123"
         };
 
-        HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
-            "users/register",
-            request,
-            TestContext.Current.CancellationToken);
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync("users/register", request);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<Guid>(TestContext.Current.CancellationToken);
+        return await response.Content.ReadFromJsonAsync<Guid>();
     }
 
     protected async Task<AccessTokens> LoginAsync(string email)
     {
         var request = new { email, password = "Password123" };
 
-        HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
-            "users/login",
-            request,
-            TestContext.Current.CancellationToken);
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync("users/login", request);
         response.EnsureSuccessStatusCode();
 
-        AccessTokens? tokens = await response.Content.ReadFromJsonAsync<AccessTokens>(TestContext.Current.CancellationToken);
+        AccessTokens? tokens = await response.Content.ReadFromJsonAsync<AccessTokens>();
 
         return tokens!;
     }

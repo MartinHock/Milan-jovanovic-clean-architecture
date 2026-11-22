@@ -23,7 +23,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new RefreshTokenCommand("missing-token"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -49,7 +49,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new RefreshTokenCommand("expired-token"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -76,7 +76,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
             new RefreshTokenCommand("old-token"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
