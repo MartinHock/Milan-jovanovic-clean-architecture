@@ -29,7 +29,7 @@ public sealed class GetUserByEmailQueryHandlerTests : BaseHandlerTest
     }
 
     [Fact]
-    public async Task Handle_Should_ReturnUnauthorized_WhenEmailBelongsToAnotherUser()
+    public async Task Handle_Should_ReturnNotFound_WhenEmailBelongsToAnotherUser()
     {
         await using TestDbContext context = CreateDbContext();
         User otherUser = CreateUser("other@example.com");
@@ -44,7 +44,7 @@ public sealed class GetUserByEmailQueryHandlerTests : BaseHandlerTest
             new GetUserByEmailQuery(otherUser.Email), TestContext.Current.CancellationToken);
 
         result.IsFailure.ShouldBeTrue();
-        result.Error.Code.ShouldBe("Users.Unauthorized");
+        result.Error.Code.ShouldBe("Users.NotFoundByEmail");
     }
 
     [Fact]
